@@ -297,10 +297,10 @@ void menu::delete_components( ){
 		bool find = 0;
 		for(auto iter =  _Components.begin() ; iter!= _Components.end() ; ) {
 			if((*iter)->get_Components_ID() == to_string(id_to_delete)){
-                //undo_delete_Component_no_Group = 1;
-                //undo_Components.set_Components_ID ((*iter)->ID) ;
-                //undo_Components.set_Components_Name ((*iter)->Components_Name) ;
-                //undo_Components.set_Type ((*iter)->Type) ;
+                undo_Components.set_Components_ID((*iter)->get_Components_ID());
+                undo_Components.set_Components_Name((*iter)->get_Components_Name());
+                undo_Components.set_Type((*iter)->get_Type());
+                
 				iter = _Components.erase(iter);
 				find |= 1;
 				break;
@@ -311,6 +311,8 @@ void menu::delete_components( ){
 		
         if(!find){
             printf("\nThe component of ID \'%d\' is not exist.\n", id_to_delete);
+           
+            
             return;
         }else{
         	
@@ -341,6 +343,10 @@ void menu::delete_components( ){
 					}
 					iter->set_Member(s);
 				}
+                else if(!find){
+                    reset_undo_redo();
+                    undo_delete_Component_no_Group = 1;
+                }
 			}
             printf("\nThe component of ID \'%d\' has been deleted.\n", id_to_delete);        	
 		}
@@ -729,6 +735,13 @@ void menu::redo(){
         undo_create_Group = 1;
            
     }
+    if(redo_delete_Component_no_Group == 1){
+            
+            _Components.pop_back();
+            set_Components_ID( get_Components_ID() - 1 );
+            undo_delete_Component_no_Group = 1;
+            redo_delete_Component_no_Group = 0;
+        }
 }
     
 void menu::reset_undo_redo(){
@@ -867,6 +880,30 @@ void menu::undo(){
             
             undo_create_Group = 0;
             redo_create_Group = 1;
+        }
+        
+        if(undo_delete_Component_no_Group == 1){
+            
+            string type_to_write = undo_Components.get_Type();
+            
+            if(type_to_write == "C"){
+	            _Components.push_back( std::tr1::shared_ptr <cube> (new cube(type_to_write, to_string(get_Components_ID() ), undo_Components.get_Components_Name())) );
+              }
+	          else if(type_to_write == "P"){
+	            _Components.push_back( std::tr1::shared_ptr <pyramid> (new pyramid(type_to_write, to_string(get_Components_ID() ), undo_Components.get_Components_Name())) );
+                
+              }
+	          else if(type_to_write == "S"){
+	            _Components.push_back( std::tr1::shared_ptr <sphere> (new sphere(type_to_write, to_string(get_Components_ID()), undo_Components.get_Components_Name())) );
+                
+              }
+	          else if(type_to_write == "L"){
+	            _Components.push_back( std::tr1::shared_ptr <line> (new line(type_to_write, to_string(get_Components_ID() ), undo_Components.get_Components_Name())) );
+              }
+            
+            set_Components_ID( get_Components_ID() + 1 );
+            undo_delete_Component_no_Group = 0;
+            redo_delete_Component_no_Group = 1;
         }
 }
 
